@@ -1,0 +1,32 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import re
+
+column_names = ['target', 'ids', 'date', 'flag', 'user', 'text']
+df = pd.read_csv('training.1600000.processed.noemoticon.csv', encoding='ISO-8859-1', names=column_names)
+
+df['sentiment'] = df['target'].map({0: 'Negative', 4: 'Positive'})
+
+df = df[['text', 'sentiment']].dropna().drop_duplicates()
+
+brand = "apple" 
+
+df['text_clean'] = df['text'].apply(lambda x: re.sub(r'[^a-zA-Z\s]', '', x).lower())
+
+brand_df = df[df['text_clean'].str.contains(brand.lower())]
+
+if brand_df.empty:
+    print(f"No tweets found mentioning the brand '{brand}'.")
+else:
+    sentiment_counts = brand_df['sentiment'].value_counts()
+    print(f"\nSentiment Analysis for brand: '{brand}'")
+    print(sentiment_counts)
+    
+    plt.figure(figsize=(6, 4))
+    sns.countplot(data=brand_df, x='sentiment', hue='sentiment', palette='coolwarm', legend=False)
+    plt.title(f"Public Sentiment Towards '{brand.capitalize()}'")
+    plt.xlabel('Sentiment')
+    plt.ylabel('Number of Tweets')
+    plt.tight_layout()
+    plt.show()
